@@ -1,0 +1,57 @@
+const API_BASE = '/api';
+
+async function request(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `Erro ${res.status}`);
+  }
+  return data;
+}
+
+export const api = {
+  getJobs: () => request('/jobs'),
+  getJob: (id) => request(`/jobs/${id}`),
+  updateJobStatus: (id, status) =>
+    request(`/jobs/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }),
+  addComment: (id, content) =>
+    request(`/jobs/${id}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    }),
+  generateCv: (id, language) =>
+    request(`/jobs/${id}/generate-cv`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language }),
+    }),
+  getCvs: (id) => request(`/jobs/${id}/cvs`),
+  importJson: (file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request('/imports', { method: 'POST', body: form });
+  },
+  getImports: () => request('/imports'),
+  getAiUsage: () => request('/ai/usage'),
+  getSettings: () => request('/settings'),
+  updateSettings: (data) =>
+    request('/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  pickResumeFile: async () => {
+    const res = await fetch(`${API_BASE}/settings/pick-resume-file`, { method: 'POST' });
+    if (res.status === 204) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Erro ${res.status}`);
+    }
+    return data;
+  },
+};

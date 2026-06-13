@@ -1,0 +1,26 @@
+Quero vagas de Frontend ou Backend Internacionais se possivel
+Tecnologias:
+- Angular
+- React
+- Node
+
+Salário:
+- Mínimo: 
+- Moeda: USD | BRL | EUR
+- Período: mensal | anual
+
+Modalidade:
+- [X] Somente remoto
+- [ ] Híbrido aceito
+- [ ] Presencial aceito
+
+Escopo geográfico:
+- [X] Internacional
+- [X] Brasil
+- Países específicos: 
+
+Senioridade:
+- Pleno | Senior
+
+Outros critérios:
+- Também tenho experiencia em Pentaho se achar algo interessante
