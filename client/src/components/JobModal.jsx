@@ -18,6 +18,7 @@ export default function JobModal({ jobId, onClose }) {
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', jobId],
@@ -47,6 +48,14 @@ export default function JobModal({ jobId, onClose }) {
       queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
     },
     onError: (err) => setError(err.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.deleteJob(jobId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      onClose();
+    },
   });
 
   async function loadLatestCv() {
@@ -272,7 +281,81 @@ export default function JobModal({ jobId, onClose }) {
           </div>
         </section>
       </div>
+
+      <div className="mt-6 flex justify-end border-t border-slate-800 pt-4">
+        <button
+          type="button"
+          onClick={() => setShowDeleteModal(true)}
+          className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-300"
+        >
+          Remover vaga
+        </button>
+      </div>
+
+      {showDeleteModal && (
+        <DeleteJobModal
+          job={job}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={() => deleteMutation.mutate()}
+          isPending={deleteMutation.isPending}
+          error={deleteMutation.isError ? deleteMutation.error.message : null}
+        />
+      )}
     </ModalShell>
+  );
+}
+
+function DeleteJobModal({ job, onClose, onConfirm, isPending, error }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isPending}
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-800 hover:text-white disabled:opacity-50"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+
+        <h2 className="mb-3 pr-8 text-lg font-semibold text-white">Remover vaga</h2>
+        <p className="mb-4 text-sm text-slate-300">
+          Tem certeza que deseja remover esta vaga do kanban?
+        </p>
+
+        <div className="mb-4 rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2 text-sm">
+          <p className="font-medium text-white">{job.title}</p>
+          <p className="text-slate-400">{job.company}</p>
+        </div>
+
+        <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          Comentários e CVs gerados para esta vaga também serão removidos. Esta ação{' '}
+          <strong className="font-semibold">não pode ser desfeita</strong>.
+        </p>
+
+        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+          >
+            {isPending ? 'Removendo...' : 'Confirmar remoção'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

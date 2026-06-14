@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [resumeExists, setResumeExists] = useState(false);
   const [defaultCvLanguage, setDefaultCvLanguage] = useState('pt-BR');
   const [message, setMessage] = useState(null);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
@@ -47,6 +48,20 @@ export default function SettingsPage() {
       setResumeExists(Boolean(data.resumeExists));
       setMessage('Currículo base selecionado e salvo.');
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+    },
+    onError: (err) => setMessage(`Erro: ${err.message}`),
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: api.resetDatabase,
+    onSuccess: (result) => {
+      setShowResetModal(false);
+      setMessage(
+        `Banco zerado: ${result.jobsRemoved} vagas, ${result.importsRemoved} importações e ${result.aiUsageRemoved} registros de uso de IA removidos.`
+      );
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['imports'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
     },
     onError: (err) => setMessage(`Erro: ${err.message}`),
   });
@@ -168,6 +183,86 @@ export default function SettingsPage() {
           </div>
         )}
       </section>
+
+      <section className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
+        <h2 className="mb-1 font-medium text-white">Zerar banco de dados</h2>
+        <p className="mb-4 text-sm text-slate-400">
+          Remove todos os registros de vagas para permitir uma nova importação do zero.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowResetModal(true)}
+          className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-300"
+        >
+          Limpar todos os registros
+        </button>
+      </section>
+
+      {showResetModal && (
+        <ResetDatabaseModal
+          onClose={() => setShowResetModal(false)}
+          onConfirm={() => resetMutation.mutate()}
+          isPending={resetMutation.isPending}
+          error={resetMutation.isError ? resetMutation.error.message : null}
+        />
+      )}
+    </div>
+  );
+}
+
+function ResetDatabaseModal({ onClose, onConfirm, isPending, error }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isPending}
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-800 hover:text-white disabled:opacity-50"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+
+        <h2 className="mb-3 pr-8 text-lg font-semibold text-white">Limpar banco de dados</h2>
+        <p className="mb-4 text-sm text-slate-300">
+          Esta ação irá remover permanentemente todos os dados abaixo. Use quando quiser
+          reimportar um arquivo de vagas do zero.
+        </p>
+
+        <ul className="mb-4 list-inside list-disc space-y-1 text-sm text-slate-400">
+          <li>Todas as vagas do kanban</li>
+          <li>Comentários e CVs gerados</li>
+          <li>Histórico de importações</li>
+          <li>Registros de uso de IA</li>
+        </ul>
+
+        <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          As configurações (currículo base e idioma padrão) serão mantidas. Esta ação{' '}
+          <strong className="font-semibold">não pode ser desfeita</strong> — não há rollback.
+        </p>
+
+        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+          >
+            {isPending ? 'Limpando...' : 'Confirmar limpeza'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

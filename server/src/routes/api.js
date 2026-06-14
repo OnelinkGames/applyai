@@ -72,6 +72,14 @@ export function createRouter(db) {
     res.json(job);
   });
 
+  router.delete('/jobs/:id', (req, res) => {
+    const result = db.prepare('DELETE FROM jobs WHERE id = ?').run(req.params.id);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Vaga não encontrada' });
+    }
+    res.status(204).end();
+  });
+
   router.post('/jobs/:id/comments', (req, res) => {
     const { content } = req.body;
     if (!content?.trim()) {
@@ -274,6 +282,21 @@ export function createRouter(db) {
 
   router.get('/ai/usage', (_req, res) => {
     res.json(getAiUsageReport(db));
+  });
+
+  router.post('/database/reset', (_req, res) => {
+    const jobsRemoved = db.prepare('SELECT COUNT(*) AS count FROM jobs').get().count;
+    const importsRemoved = db.prepare('SELECT COUNT(*) AS count FROM imports').get().count;
+    const aiUsageRemoved = db.prepare('SELECT COUNT(*) AS count FROM ai_usage').get().count;
+
+    const reset = db.transaction(() => {
+      db.prepare('DELETE FROM jobs').run();
+      db.prepare('DELETE FROM imports').run();
+      db.prepare('DELETE FROM ai_usage').run();
+    });
+    reset();
+
+    res.json({ jobsRemoved, importsRemoved, aiUsageRemoved });
   });
 
   return router;

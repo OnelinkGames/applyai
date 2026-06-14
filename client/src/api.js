@@ -2,6 +2,7 @@ const API_BASE = '/api';
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, options);
+  if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error || `Erro ${res.status}`);
@@ -18,6 +19,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     }),
+  deleteJob: (id) => request(`/jobs/${id}`, { method: 'DELETE' }),
   addComment: (id, content) =>
     request(`/jobs/${id}/comments`, {
       method: 'POST',
@@ -54,4 +56,6 @@ export const api = {
     }
     return data;
   },
+  resetDatabase: () =>
+    request('/database/reset', { method: 'POST' }),
 };

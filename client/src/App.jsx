@@ -2,6 +2,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import KanbanPage from './pages/KanbanPage';
 import SettingsPage from './pages/SettingsPage';
 import AiCostsPage from './pages/AiCostsPage';
+import AppIcon from './components/AppIcon';
 
 export default function App() {
   const location = useLocation();
@@ -10,7 +11,8 @@ export default function App() {
     <div className="min-h-screen">
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3">
-          <Link to="/" className="text-lg font-semibold tracking-tight text-white">
+          <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-white">
+            <AppIcon className="h-8 w-8 shrink-0" />
             Vagas Kanban
           </Link>
           <nav className="flex gap-2">
