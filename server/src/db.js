@@ -102,6 +102,7 @@ export function initDatabase() {
     'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'
   );
   insertSetting.run('resume_path', defaultResumePath);
+  insertSetting.run('search_query_path', process.env.SEARCH_QUERY_PATH || './search-query.txt');
   insertSetting.run('default_cv_language', 'pt-BR');
 
   return db;

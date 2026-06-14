@@ -120,3 +120,24 @@ export function readResumeContent(db) {
   }
   return fs.readFileSync(absolutePath, 'utf-8');
 }
+
+export function readSearchQueryContent(db) {
+  const searchQueryPath = getSetting(
+    db,
+    'search_query_path',
+    process.env.SEARCH_QUERY_PATH || './search-query.txt'
+  );
+  const absolutePath = resolveProjectPath(searchQueryPath);
+  if (!fs.existsSync(absolutePath)) {
+    return '';
+  }
+  return fs.readFileSync(absolutePath, 'utf-8');
+}
+
+export function getSearchQueryPath(db) {
+  return getSetting(
+    db,
+    'search_query_path',
+    process.env.SEARCH_QUERY_PATH || './search-query.txt'
+  );
+}

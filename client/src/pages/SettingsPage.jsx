@@ -7,6 +7,8 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const [resumePath, setResumePath] = useState('');
   const [resumeExists, setResumeExists] = useState(false);
+  const [searchQueryPath, setSearchQueryPath] = useState('');
+  const [searchQueryExists, setSearchQueryExists] = useState(false);
   const [defaultCvLanguage, setDefaultCvLanguage] = useState('pt-BR');
   const [message, setMessage] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -16,26 +18,27 @@ export default function SettingsPage() {
     queryFn: api.getSettings,
   });
 
-  const { data: imports = [] } = useQuery({
-    queryKey: ['imports'],
-    queryFn: api.getImports,
-  });
-
   useEffect(() => {
     if (settings) {
       setResumePath(settings.resumePath || './resume.md');
       setResumeExists(Boolean(settings.resumeExists));
+      setSearchQueryPath(settings.searchQueryPath || './search-query.txt');
+      setSearchQueryExists(Boolean(settings.searchQueryExists));
       setDefaultCvLanguage(settings.defaultCvLanguage || 'pt-BR');
     }
   }, [settings]);
 
   const saveMutation = useMutation({
-    mutationFn: () => api.updateSettings({ resumePath, defaultCvLanguage }),
+    mutationFn: () =>
+      api.updateSettings({ resumePath, searchQueryPath, defaultCvLanguage }),
     onSuccess: (data) => {
       setResumePath(data.resumePath || resumePath);
       setResumeExists(Boolean(data.resumeExists));
+      setSearchQueryPath(data.searchQueryPath || searchQueryPath);
+      setSearchQueryExists(Boolean(data.searchQueryExists));
       setMessage('Configurações salvas.');
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ['job-search-defaults'] });
     },
     onError: (err) => setMessage(`Erro: ${err.message}`),
   });
@@ -48,6 +51,20 @@ export default function SettingsPage() {
       setResumeExists(Boolean(data.resumeExists));
       setMessage('Currículo base selecionado e salvo.');
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ['job-search-defaults'] });
+    },
+    onError: (err) => setMessage(`Erro: ${err.message}`),
+  });
+
+  const pickSearchQueryMutation = useMutation({
+    mutationFn: api.pickSearchQueryFile,
+    onSuccess: (data) => {
+      if (!data) return;
+      setSearchQueryPath(data.searchQueryPath || '');
+      setSearchQueryExists(Boolean(data.searchQueryExists));
+      setMessage('Critérios de busca selecionados e salvos.');
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ['job-search-defaults'] });
     },
     onError: (err) => setMessage(`Erro: ${err.message}`),
   });
@@ -75,7 +92,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-xl font-semibold text-white">Configurações</h1>
         <p className="text-sm text-slate-400">
-          Currículo base e preferências para geração de CV.
+          Currículo base, critérios de busca e preferências para geração de CV.
         </p>
       </div>
 
@@ -126,6 +143,44 @@ export default function SettingsPage() {
         </div>
 
         <div>
+          <label className="mb-1 block text-sm text-slate-300">
+            Caminho dos critérios de busca (search-query.txt)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchQueryPath}
+              onChange={(e) => {
+                setSearchQueryPath(e.target.value);
+                setSearchQueryExists(false);
+              }}
+              className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white"
+              placeholder="/caminho/para/search-query.txt"
+            />
+            <button
+              type="button"
+              onClick={() => pickSearchQueryMutation.mutate()}
+              disabled={pickSearchQueryMutation.isPending}
+              className="shrink-0 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+            >
+              {pickSearchQueryMutation.isPending ? 'Abrindo...' : 'Selecionar arquivo'}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Define cargo, tecnologias, modalidade e localização usados na busca de vagas.
+          </p>
+          {searchQueryPath && (
+            <p
+              className={`mt-1 text-xs ${searchQueryExists ? 'text-emerald-400' : 'text-amber-400'}`}
+            >
+              {searchQueryExists
+                ? 'Arquivo encontrado e pronto para buscar vagas.'
+                : 'Arquivo não encontrado no caminho informado.'}
+            </p>
+          )}
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm text-slate-300">Idioma padrão do CV</label>
           <select
             value={defaultCvLanguage}
@@ -148,40 +203,6 @@ export default function SettingsPage() {
         >
           {saveMutation.isPending ? 'Salvando...' : 'Salvar configurações'}
         </button>
-      </section>
-
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-        <h2 className="mb-4 font-medium text-white">Histórico de importações</h2>
-        {imports.length === 0 ? (
-          <p className="text-sm text-slate-500">Nenhuma importação realizada ainda.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400">
-                  <th className="pb-2 pr-4">Data</th>
-                  <th className="pb-2 pr-4">Arquivo</th>
-                  <th className="pb-2 pr-4">Adicionadas</th>
-                  <th className="pb-2 pr-4">Duplicadas</th>
-                  <th className="pb-2">Filtradas (&lt;70%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {imports.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-800/50 text-slate-300">
-                    <td className="py-2 pr-4">
-                      {new Date(item.importedAt).toLocaleString('pt-BR')}
-                    </td>
-                    <td className="py-2 pr-4">{item.filename || '—'}</td>
-                    <td className="py-2 pr-4">{item.jobsAdded}</td>
-                    <td className="py-2 pr-4">{item.jobsSkipped}</td>
-                    <td className="py-2">{item.jobsFiltered}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
 
       <section className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
@@ -238,7 +259,7 @@ function ResetDatabaseModal({ onClose, onConfirm, isPending, error }) {
         </ul>
 
         <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          As configurações (currículo base e idioma padrão) serão mantidas. Esta ação{' '}
+          As configurações (currículo base, critérios de busca e idioma padrão) serão mantidas. Esta ação{' '}
           <strong className="font-semibold">não pode ser desfeita</strong> — não há rollback.
         </p>
 

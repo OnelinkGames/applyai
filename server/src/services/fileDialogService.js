@@ -4,36 +4,36 @@ import os from 'os';
 import path from 'path';
 import { resolveProjectPath } from '../db.js';
 
-const RESUME_EXTENSIONS = new Set(['.md', '.markdown', '.txt']);
+const TEXT_EXTENSIONS = new Set(['.md', '.markdown', '.txt']);
 
-export function resolveResumePath(resumePath) {
-  if (!resumePath?.trim()) return null;
-  return resolveProjectPath(resumePath.trim());
+function resolveConfiguredPath(configuredPath) {
+  if (!configuredPath?.trim()) return null;
+  return resolveProjectPath(configuredPath.trim());
 }
 
-export function getResumePathStatus(resumePath) {
-  const absolutePath = resolveResumePath(resumePath);
+function getPathStatus(configuredPath) {
+  const absolutePath = resolveConfiguredPath(configuredPath);
   if (!absolutePath) {
     return { exists: false, absolutePath: null };
   }
   return { exists: fs.existsSync(absolutePath), absolutePath };
 }
 
-export function validateResumeFile(resumePath) {
-  const { exists, absolutePath } = getResumePathStatus(resumePath);
+function validateTextFile(configuredPath, label) {
+  const { exists, absolutePath } = getPathStatus(configuredPath);
   if (!absolutePath) {
-    const error = new Error('Caminho do currículo não informado');
+    const error = new Error(`Caminho do ${label} não informado`);
     error.status = 400;
     throw error;
   }
   if (!exists) {
-    const error = new Error(`Arquivo de currículo não encontrado: ${absolutePath}`);
+    const error = new Error(`Arquivo não encontrado: ${absolutePath}`);
     error.status = 400;
     throw error;
   }
   const ext = path.extname(absolutePath).toLowerCase();
-  if (!RESUME_EXTENSIONS.has(ext)) {
-    const error = new Error('Selecione um arquivo .md, .markdown ou .txt');
+  if (!TEXT_EXTENSIONS.has(ext)) {
+    const error = new Error('Selecione um arquivo .txt, .md ou .markdown');
     error.status = 400;
     throw error;
   }
@@ -41,7 +41,7 @@ export function validateResumeFile(resumePath) {
 }
 
 function getInitialDirectory(currentPath) {
-  const resolved = resolveResumePath(currentPath);
+  const resolved = resolveConfiguredPath(currentPath);
   if (resolved && fs.existsSync(resolved)) {
     return path.dirname(resolved);
   }
@@ -70,14 +70,14 @@ function commandExists(command) {
   return result.status === 0 && Boolean(result.stdout.trim());
 }
 
-function pickLinux(initialDir) {
+function pickLinux(initialDir, title) {
   if (commandExists('zenity')) {
     return runCommand('zenity', [
       '--file-selection',
-      '--title=Selecionar currículo base',
+      `--title=${title}`,
       `--filename=${initialDir}/`,
-      '--file-filter=Markdown | *.md *.markdown',
       '--file-filter=Texto | *.txt',
+      '--file-filter=Markdown | *.md *.markdown',
       '--file-filter=Todos | *',
     ]);
   }
@@ -86,8 +86,8 @@ function pickLinux(initialDir) {
     return runCommand('kdialog', [
       '--getopenfilename',
       initialDir,
-      '*.md *.markdown *.txt|Markdown e texto (*.md *.markdown *.txt)',
-      'Selecionar currículo base',
+      '*.txt *.md *.markdown|Texto e Markdown (*.txt *.md *.markdown)',
+      title,
     ]);
   }
 
@@ -98,11 +98,11 @@ function pickLinux(initialDir) {
   throw error;
 }
 
-function pickMac(initialDir) {
+function pickMac(initialDir, title) {
   const script = `
     set defaultPath to POSIX file "${initialDir.replace(/"/g, '\\"')}"
     try
-      set chosenFile to choose file with prompt "Selecionar currículo base" default location defaultPath
+      set chosenFile to choose file with prompt "${title.replace(/"/g, '\\"')}" default location defaultPath
       return POSIX path of chosenFile
     on error number -128
       return ""
@@ -112,37 +112,68 @@ function pickMac(initialDir) {
   return selected || null;
 }
 
-function pickWindows(initialDir) {
+function pickWindows(initialDir, title) {
   const escapedDir = initialDir.replace(/'/g, "''");
+  const escapedTitle = title.replace(/'/g, "''");
   const script = `
     Add-Type -AssemblyName System.Windows.Forms
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
-    $dialog.Title = 'Selecionar currículo base'
+    $dialog.Title = '${escapedTitle}'
     $dialog.InitialDirectory = '${escapedDir}'
-    $dialog.Filter = 'Markdown (*.md)|*.md|Texto (*.txt)|*.txt|Todos (*.*)|*.*'
+    $dialog.Filter = 'Texto (*.txt)|*.txt|Markdown (*.md)|*.md|Todos (*.*)|*.*'
     if ($dialog.ShowDialog() -eq 'OK') { $dialog.FileName } else { '' }
   `;
   const selected = runCommand('powershell', ['-NoProfile', '-Command', script]);
   return selected || null;
 }
 
-export function pickResumeFile(currentPath) {
+function pickTextFile(currentPath, title) {
   const initialDir = getInitialDirectory(currentPath);
 
   let selectedPath = null;
   if (process.platform === 'linux') {
-    selectedPath = pickLinux(initialDir);
+    selectedPath = pickLinux(initialDir, title);
   } else if (process.platform === 'darwin') {
-    selectedPath = pickMac(initialDir);
+    selectedPath = pickMac(initialDir, title);
   } else if (process.platform === 'win32') {
-    selectedPath = pickWindows(initialDir);
+    selectedPath = pickWindows(initialDir, title);
   } else {
     const error = new Error('Seleção de arquivo não suportada neste sistema operacional');
     error.status = 501;
     throw error;
   }
 
-  if (!selectedPath) return null;
+  return selectedPath || null;
+}
 
+export function resolveResumePath(resumePath) {
+  return resolveConfiguredPath(resumePath);
+}
+
+export function getResumePathStatus(resumePath) {
+  return getPathStatus(resumePath);
+}
+
+export function validateResumeFile(resumePath) {
+  return validateTextFile(resumePath, 'currículo');
+}
+
+export function pickResumeFile(currentPath) {
+  const selectedPath = pickTextFile(currentPath, 'Selecionar currículo base');
+  if (!selectedPath) return null;
   return validateResumeFile(selectedPath);
+}
+
+export function getSearchQueryPathStatus(searchQueryPath) {
+  return getPathStatus(searchQueryPath);
+}
+
+export function validateSearchQueryFile(searchQueryPath) {
+  return validateTextFile(searchQueryPath, 'arquivo de critérios de busca');
+}
+
+export function pickSearchQueryFile(currentPath) {
+  const selectedPath = pickTextFile(currentPath, 'Selecionar critérios de busca');
+  if (!selectedPath) return null;
+  return validateSearchQueryFile(selectedPath);
 }

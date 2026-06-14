@@ -13,6 +13,7 @@ import { JOB_STATUSES } from '../constants';
 import KanbanColumn from './KanbanColumn';
 import JobCard from './JobCard';
 import JobModal from './JobModal';
+import JobSearchModal from './JobSearchModal';
 
 export default function KanbanBoard() {
   const queryClient = useQueryClient();
@@ -20,6 +21,8 @@ export default function KanbanBoard() {
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [activeJob, setActiveJob] = useState(null);
   const [importMessage, setImportMessage] = useState(null);
+  const [searchMessage, setSearchMessage] = useState(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs'],
@@ -43,6 +46,21 @@ export default function KanbanBoard() {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       if (selectedJobId) queryClient.invalidateQueries({ queryKey: ['job', selectedJobId] });
     },
+  });
+
+  const searchMutation = useMutation({
+    mutationFn: api.searchJobs,
+    onSuccess: (result) => {
+      const { totalFound, added, skipped, filtered, providers } = result.summary;
+      const aiNote = result.aiUsed ? ' Análise de perfil com IA incluída nos custos.' : '';
+      setSearchMessage(
+        `Busca concluída: ${totalFound} encontradas, ${added} novas, ${skipped} já existentes, ${filtered} abaixo de 70%. Providers: ${providers.executed} ok, ${providers.skipped} ignorados, ${providers.failed} com erro.${aiNote}`
+      );
+      setShowSearchModal(false);
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['imports'] });
+    },
+    onError: (err) => setSearchMessage(`Erro na busca: ${err.message}`),
   });
 
   const importMutation = useMutation({
@@ -107,6 +125,17 @@ export default function KanbanBoard() {
           <p className="text-sm text-slate-400">{jobs.length} vagas no total</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSearchMessage(null);
+              setShowSearchModal(true);
+            }}
+            disabled={searchMutation.isPending}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+          >
+            {searchMutation.isPending ? 'Buscando vagas...' : 'Buscar vagas'}
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -124,6 +153,12 @@ export default function KanbanBoard() {
           </button>
         </div>
       </div>
+
+      {searchMessage && (
+        <div className="mb-4 rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-100">
+          {searchMessage}
+        </div>
+      )}
 
       {importMessage && (
         <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300">
@@ -158,6 +193,14 @@ export default function KanbanBoard() {
 
       {selectedJobId && (
         <JobModal jobId={selectedJobId} onClose={() => setSelectedJobId(null)} />
+      )}
+
+      {showSearchModal && (
+        <JobSearchModal
+          onClose={() => setShowSearchModal(false)}
+          onSearch={(filters) => searchMutation.mutate(filters)}
+          isSearching={searchMutation.isPending}
+        />
       )}
     </>
   );

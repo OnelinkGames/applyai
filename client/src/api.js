@@ -38,7 +38,15 @@ export const api = {
     form.append('file', file);
     return request('/imports', { method: 'POST', body: form });
   },
-  getImports: () => request('/imports'),
+  searchJobs: (filters) =>
+    request('/jobs/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filters ?? {}),
+    }),
+  getJobSearchDefaults: () => request('/jobs/search/defaults'),
+  getImports: (page = 1, limit = 20) =>
+    request(`/imports?page=${page}&limit=${limit}`),
   getAiUsage: () => request('/ai/usage'),
   getSettings: () => request('/settings'),
   updateSettings: (data) =>
@@ -49,6 +57,15 @@ export const api = {
     }),
   pickResumeFile: async () => {
     const res = await fetch(`${API_BASE}/settings/pick-resume-file`, { method: 'POST' });
+    if (res.status === 204) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Erro ${res.status}`);
+    }
+    return data;
+  },
+  pickSearchQueryFile: async () => {
+    const res = await fetch(`${API_BASE}/settings/pick-search-query-file`, { method: 'POST' });
     if (res.status === 204) return null;
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {

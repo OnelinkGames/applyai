@@ -7,9 +7,14 @@ import {
   getResumePathStatus,
   pickResumeFile,
   validateResumeFile,
+  getSearchQueryPathStatus,
+  pickSearchQueryFile,
+  validateSearchQueryFile,
 } from '../services/fileDialogService.js';
 import { generateCvForJob } from '../services/cvService.js';
 import { recordAiUsage, getAiUsageReport } from '../services/aiUsageService.js';
+import { runJobSearch } from '../services/jobSearchService.js';
+import { getSearchDefaults } from '../services/profileService.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -27,6 +32,26 @@ export function createRouter(db) {
       rows = db.prepare('SELECT * FROM jobs ORDER BY score_overall DESC, id DESC').all();
     }
     res.json(rows.map(mapJobRow));
+  });
+
+  router.get('/jobs/search/defaults', (req, res) => {
+    try {
+      res.json(getSearchDefaults(db));
+    } catch (error) {
+      const status = error.message?.includes('não encontrado') ? 400 : 500;
+      res.status(status).json({ error: error.message || 'Erro ao carregar perfil de busca' });
+    }
+  });
+
+  router.post('/jobs/search', async (req, res) => {
+    try {
+      const result = await runJobSearch(db, req.body);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error('[jobs/search]', error);
+      const status = error.message?.includes('não encontrado') ? 400 : 500;
+      res.status(status).json({ error: error.message || 'Erro ao buscar vagas' });
+    }
   });
 
   router.get('/jobs/:id', (req, res) => {
@@ -204,10 +229,16 @@ export function createRouter(db) {
     }
   });
 
-  router.get('/imports', (_req, res) => {
+  router.get('/imports', (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const offset = (page - 1) * limit;
+
+    const { total } = db.prepare('SELECT COUNT(*) AS total FROM imports').get();
+
     const imports = db
-      .prepare('SELECT * FROM imports ORDER BY imported_at DESC LIMIT 50')
-      .all()
+      .prepare('SELECT * FROM imports ORDER BY imported_at DESC LIMIT ? OFFSET ?')
+      .all(limit, offset)
       .map((row) => ({
         id: row.id,
         filename: row.filename,
@@ -217,18 +248,31 @@ export function createRouter(db) {
         totalInFile: row.total_in_file,
         importedAt: row.imported_at,
       }));
-    res.json(imports);
+
+    res.json({
+      items: imports,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
   });
 
   function buildSettingsResponse() {
     const resumePath = getSetting(db, 'resume_path', './resume.md');
+    const searchQueryPath = getSetting(db, 'search_query_path', './search-query.txt');
     const { exists: resumeExists, absolutePath: resumeAbsolutePath } =
       getResumePathStatus(resumePath);
+    const { exists: searchQueryExists, absolutePath: searchQueryAbsolutePath } =
+      getSearchQueryPathStatus(searchQueryPath);
 
     return {
       resumePath,
       resumeExists,
       resumeAbsolutePath,
+      searchQueryPath,
+      searchQueryExists,
+      searchQueryAbsolutePath,
       defaultCvLanguage: getSetting(db, 'default_cv_language', 'pt-BR'),
     };
   }
@@ -254,13 +298,39 @@ export function createRouter(db) {
     }
   });
 
+  router.post('/settings/pick-search-query-file', (req, res) => {
+    try {
+      const currentPath = getSetting(db, 'search_query_path', './search-query.txt');
+      const absolutePath = pickSearchQueryFile(currentPath);
+
+      if (!absolutePath) {
+        return res.status(204).end();
+      }
+
+      setSetting(db, 'search_query_path', absolutePath);
+      res.json(buildSettingsResponse());
+    } catch (error) {
+      const status = error.status || 500;
+      res.status(status).json({ error: error.message || 'Erro ao selecionar arquivo' });
+    }
+  });
+
   router.patch('/settings', (req, res) => {
-    const { resumePath, defaultCvLanguage } = req.body;
+    const { resumePath, searchQueryPath, defaultCvLanguage } = req.body;
 
     if (resumePath != null) {
       try {
         validateResumeFile(resumePath);
         setSetting(db, 'resume_path', resumePath.trim());
+      } catch (error) {
+        const status = error.status || 400;
+        return res.status(status).json({ error: error.message || 'Caminho inválido' });
+      }
+    }
+    if (searchQueryPath != null) {
+      try {
+        validateSearchQueryFile(searchQueryPath);
+        setSetting(db, 'search_query_path', searchQueryPath.trim());
       } catch (error) {
         const status = error.status || 400;
         return res.status(status).json({ error: error.message || 'Caminho inválido' });

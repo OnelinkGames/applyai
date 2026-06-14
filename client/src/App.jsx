@@ -2,6 +2,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import KanbanPage from './pages/KanbanPage';
 import SettingsPage from './pages/SettingsPage';
 import AiCostsPage from './pages/AiCostsPage';
+import ImportsPage from './pages/ImportsPage';
 import AppIcon from './components/AppIcon';
 
 export default function App() {
@@ -37,6 +38,16 @@ export default function App() {
               Gastos IA
             </Link>
             <Link
+              to="/imports"
+              className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                location.pathname === '/imports'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Importações
+            </Link>
+            <Link
               to="/settings"
               className={`rounded-lg px-3 py-1.5 text-sm transition ${
                 location.pathname === '/settings'
@@ -53,6 +64,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<KanbanPage />} />
           <Route path="/ai-costs" element={<AiCostsPage />} />
+          <Route path="/imports" element={<ImportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>

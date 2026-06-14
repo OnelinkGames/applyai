@@ -132,6 +132,7 @@ export function getAiUsageReport(db) {
 
 const OPERATION_LABELS = {
   cv_generation: 'Geração de CV',
+  job_search_profile: 'Análise de perfil para busca',
 };
 
 function formatMonthLabel(ym) {
