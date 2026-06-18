@@ -1,6 +1,7 @@
 import { adzunaProvider } from './adzuna-provider.js';
 import { arbeitnowProvider } from './arbeitnow-provider.js';
 import { jobicyProvider } from './jobicy-provider.js';
+import { linkedinProvider } from './linkedin-provider.js';
 import { remotiveProvider } from './remotive-provider.js';
 import { remoteOkProvider } from './remoteok-provider.js';
 
@@ -11,4 +12,5 @@ export const jobProviders = [
   arbeitnowProvider,
   jobicyProvider,
   adzunaProvider,
+  linkedinProvider,
 ];
