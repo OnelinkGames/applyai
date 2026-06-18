@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { CV_LANGUAGES, scoreColor } from '../constants';
 import { downloadCvAsPdf } from '../utils/cvPdf';
@@ -18,6 +18,7 @@ export default function JobModal({ jobId, onClose }) {
   const [pdfDownloading, setPdfDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: job, isLoading } = useQuery({
@@ -43,6 +44,7 @@ export default function JobModal({ jobId, onClose }) {
     onSuccess: (data) => {
       setCvPreview(data);
       setError(null);
+      setToastMessage('CV gerado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
@@ -77,6 +79,12 @@ export default function JobModal({ jobId, onClose }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   function downloadCv() {
     if (!cvPreview?.content) return;
@@ -114,6 +122,11 @@ export default function JobModal({ jobId, onClose }) {
 
   return (
     <ModalShell onClose={onClose}>
+      {toastMessage && (
+        <div className="fixed right-6 top-6 z-[90] max-w-xs rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-2xl shadow-slate-950/40 backdrop-blur-md">
+          {toastMessage}
+        </div>
+      )}
       <div className="mb-4 flex items-start justify-between gap-4 pr-10">
         <div className="min-w-0 flex-1">
           <h2 className="text-xl font-semibold text-white">{job.title}</h2>

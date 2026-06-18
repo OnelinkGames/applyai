@@ -26,9 +26,12 @@ appearance: none;
 margin: 3px 5px;
 }
 </style>
+
 # Header
 
 Andrius Salgado
+
+Email: ualamy@gmail.com | Telefone: +55 (12) 97405-7937 | LinkedIn: [linkedin.com/in/seu-perfil](https://www.linkedin.com/in/andrius-salgado-b1155a144/)
 
 Desenvolvedor Front-end | Desenvolvedor Full Stack | Javascript | React | Angular | Power Bi | Mysql | Node.js | Postgres
 
@@ -41,6 +44,7 @@ Trabalho com tecnologias como Angular, Node.js, APIs REST e bancos de dados SQL,
 Também possuo experiência com integração de APIs, arquitetura de software e desenvolvimento de soluções completas, desde o planejamento até o deploy.
 
 Sou apaixonado por tecnologia e estou sempre estudando novas áreas como inteligência artificial, automação e arquitetura de sistemas, buscando criar soluções inovadoras e eficientes.
+
 # Experiência
 
 ## Globant
@@ -51,6 +55,7 @@ Sou apaixonado por tecnologia e estou sempre estudando novas áreas como intelig
 **Tempo de Empresa:** 1 ano e 3 meses
 **Descrição das atividades:** Desenvolvimento de sistemas web usando frameworks frontend como Angular, React e também backend utilizando Node.js, atuando na resolução de problemas, arquitetura das aplicações, manutenção e correção de legados.
 **Habilidades aprendidas:** Angular 2, React, AngularJS, Node.js, TailwindCss, Bootstrap, NG-Bootstrap, PrimeNG, RxJS, Jasmine, Karma, Jest, React Testing Library, Zustand, React Router, React Hook Form, ShadCN, Redux, React Query, Typescript, Postgres.
+
 ## Globant
 
 **Cargo:** Web UI Developer Semi Sênior (Pleno)
@@ -60,6 +65,7 @@ Sou apaixonado por tecnologia e estou sempre estudando novas áreas como intelig
 **Tempo de Empresa:** 3 anos
 **Descrição das atividades:** Desenvolvimento de sistemas web usando frameworks frontend como Angular, React e também backend utilizando Node.js, atuando na resolução de problemas, arquitetura das aplicações, manutenção e correção de legados.
 **Habilidades aprendidas:** Angular 2, React, AngularJS, Node.js, TailwindCss, Bootstrap, NG-Bootstrap, PrimeNG, RxJS, Jasmine, Karma, Jest, React Testing Library, Zustand, React Router, React Hook Form, ShadCN, Redux, React Query, Typescript.
+
 ## Sonda
 
 **Cargo:** Desenvolvedor de Software SW 3 (Pleno)
@@ -68,6 +74,7 @@ Sou apaixonado por tecnologia e estou sempre estudando novas áreas como intelig
 **Tempo de Empresa:** 11 meses
 **Descrição das atividades:** Trabalho no setor de infraestrutura da empresa, atuando com suporte e manutenção de jobs com Pentaho em uma máquina linux CentOS, atuando tanto com a manutenção dos jobs quanto a qualidade e funcionamento das máquinas linux associadas tanto em ambientes dev, qas e prd, também foi realizado trabalhos com Power Bi para geração de dashboards e acompanhamento de métricas, atuação direta com o cliente na resolução de problemas e melhorias e manutenção de uptime dos servidores.
 **Habilidades aprendidas:** Pentaho, CentOS, Administração de servidores linux, Power BI, Oracle.
+
 ## Sonda
 
 **Cargo:** Desenvolvedor de Software SW 2 (Júnior)
@@ -76,6 +83,7 @@ Sou apaixonado por tecnologia e estou sempre estudando novas áreas como intelig
 **Tempo de Empresa:** 1 ano e 9 meses
 **Descrição das atividades:** Desenvolvimento de testes de aplicações com Selenium e frontend usando Angular e MongoDb com Node.js para Backend e banco de dados, com dashboard para acompanhamento dos testes.
 **Habilidades aprendidas:** Selenium, Angular, MongoDB, Node.js.
+
 ## Cenibra
 
 **Cargo:** Desenvolvedor Front-end
@@ -84,6 +92,7 @@ Sou apaixonado por tecnologia e estou sempre estudando novas áreas como intelig
 **Tempo de Empresa:** 1 ano e 11 meses
 **Descrição das atividades:** Desenvolvimento e melhorias de aplicações em Angular 2 a partir da versão 8, atuação direta com o cliente para solução de problemas, melhorias e reuniões.
 **Habilidades aprendidas:** Angular, Rxjs, Material Angular.
+
 # Formação Acadêmica
 
 ## Anhanguera Educacional
