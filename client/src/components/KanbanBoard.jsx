@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
-import { JOB_STATUSES } from '../constants';
+import { JOB_STATUSES, MONITORED_STATUSES } from '../constants';
 import KanbanColumn from './KanbanColumn';
 import JobCard from './JobCard';
 import JobModal from './JobModal';
@@ -29,13 +29,30 @@ export default function KanbanBoard() {
     queryFn: api.getJobs,
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: api.getSettings,
+  });
+
+  const kanbanSla = settings?.kanbanSla;
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status }) => api.updateJobStatus(id, status),
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ['jobs'] });
       const previous = queryClient.getQueryData(['jobs']);
       queryClient.setQueryData(['jobs'], (old = []) =>
-        old.map((j) => (j.id === id ? { ...j, status } : j))
+        old.map((j) =>
+          j.id === id
+            ? {
+                ...j,
+                status,
+                ...(MONITORED_STATUSES.includes(status)
+                  ? { enteredAt: new Date().toISOString() }
+                  : {}),
+              }
+            : j
+        )
       );
       return { previous };
     },
@@ -179,13 +196,14 @@ export default function KanbanBoard() {
               status={status}
               jobs={jobsByStatus[status]}
               onJobClick={(job) => setSelectedJobId(job.id)}
+              kanbanSla={kanbanSla}
             />
           ))}
         </div>
         <DragOverlay>
           {activeJob ? (
             <div className="w-[260px] rotate-2 opacity-90">
-              <JobCard job={activeJob} onClick={() => {}} />
+              <JobCard job={activeJob} onClick={() => {}} kanbanSla={kanbanSla} />
             </div>
           ) : null}
         </DragOverlay>

@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { STATUS_LABELS } from '../constants';
 import JobCard from './JobCard';
 
-export default function KanbanColumn({ status, jobs, onJobClick }) {
+export default function KanbanColumn({ status, jobs, onJobClick, kanbanSla }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -20,7 +20,7 @@ export default function KanbanColumn({ status, jobs, onJobClick }) {
       </div>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2" style={{ maxHeight: 'calc(100vh - 180px)' }}>
         {jobs.map((job) => (
-          <JobCard key={job.id} job={job} onClick={onJobClick} />
+          <JobCard key={job.id} job={job} onClick={onJobClick} kanbanSla={kanbanSla} />
         ))}
         {jobs.length === 0 && (
           <p className="py-8 text-center text-xs text-slate-600">Nenhuma vaga</p>

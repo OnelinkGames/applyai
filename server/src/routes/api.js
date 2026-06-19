@@ -15,6 +15,8 @@ import { generateCvForJob } from '../services/cvService.js';
 import { recordAiUsage, getAiUsageReport } from '../services/aiUsageService.js';
 import { runJobSearch } from '../services/jobSearchService.js';
 import { getSearchDefaults } from '../services/profileService.js';
+import { getKanbanSla, setKanbanSla } from '../services/slaService.js';
+import { updateJobStatusWithTracking } from '../services/stageTrackingService.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -85,15 +87,11 @@ export function createRouter(db) {
       return res.status(400).json({ error: 'Status inválido', validStatuses: JOB_STATUSES });
     }
 
-    const result = db
-      .prepare("UPDATE jobs SET status = ?, updated_at = datetime('now') WHERE id = ?")
-      .run(status, req.params.id);
-
-    if (result.changes === 0) {
+    const job = updateJobStatusWithTracking(db, req.params.id, status);
+    if (!job) {
       return res.status(404).json({ error: 'Vaga não encontrada' });
     }
 
-    const job = mapJobRow(db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id));
     res.json(job);
   });
 
@@ -274,6 +272,7 @@ export function createRouter(db) {
       searchQueryExists,
       searchQueryAbsolutePath,
       defaultCvLanguage: getSetting(db, 'default_cv_language', 'pt-BR'),
+      kanbanSla: getKanbanSla(db),
     };
   }
 
@@ -316,7 +315,7 @@ export function createRouter(db) {
   });
 
   router.patch('/settings', (req, res) => {
-    const { resumePath, searchQueryPath, defaultCvLanguage } = req.body;
+    const { resumePath, searchQueryPath, defaultCvLanguage, kanbanSla } = req.body;
 
     if (resumePath != null) {
       try {
@@ -341,6 +340,13 @@ export function createRouter(db) {
         return res.status(400).json({ error: 'Idioma inválido', validLanguages: CV_LANGUAGES });
       }
       setSetting(db, 'default_cv_language', defaultCvLanguage);
+    }
+    if (kanbanSla != null) {
+      try {
+        setKanbanSla(db, kanbanSla);
+      } catch (error) {
+        return res.status(400).json({ error: error.message || 'Configuração de SLA inválida' });
+      }
     }
 
     res.json(buildSettingsResponse());

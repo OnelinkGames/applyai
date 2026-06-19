@@ -97,6 +97,8 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_ai_usage_created_at ON ai_usage(created_at);
   `);
 
+  runMigrations(db);
+
   const defaultResumePath = process.env.RESUME_PATH || './resume.md';
   const insertSetting = db.prepare(
     'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'
@@ -104,8 +106,41 @@ export function initDatabase() {
   insertSetting.run('resume_path', defaultResumePath);
   insertSetting.run('search_query_path', process.env.SEARCH_QUERY_PATH || './search-query.txt');
   insertSetting.run('default_cv_language', 'pt-BR');
+  insertSetting.run('kanban_sla', JSON.stringify({
+    applied: { normalLimitDays: 15, warningLimitDays: 30 },
+    interview: { normalLimitDays: 15, warningLimitDays: 30 },
+    technicalInterview: { normalLimitDays: 15, warningLimitDays: 30 },
+  }));
 
   return db;
+}
+
+function runMigrations(db) {
+  const jobColumns = db.prepare('PRAGMA table_info(jobs)').all();
+  if (!jobColumns.some((c) => c.name === 'entered_at')) {
+    db.exec('ALTER TABLE jobs ADD COLUMN entered_at TEXT');
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS job_stage_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL,
+      from_column TEXT NOT NULL,
+      to_column TEXT NOT NULL,
+      moved_at TEXT NOT NULL,
+      FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_job_stage_history_job_id ON job_stage_history(job_id);
+    CREATE INDEX IF NOT EXISTS idx_job_stage_history_moved_at ON job_stage_history(moved_at);
+  `);
+
+  db.prepare(`
+    UPDATE jobs
+    SET entered_at = updated_at
+    WHERE entered_at IS NULL
+      AND status IN ('applied', 'interview', 'technical_interview')
+  `).run();
 }
 
 export function parseJsonField(value, fallback = null) {
@@ -141,6 +176,7 @@ export function mapJobRow(row) {
     searchCriteria: parseJsonField(row.search_criteria),
     candidateProfile: parseJsonField(row.candidate_profile),
     status: row.status,
+    enteredAt: row.entered_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
-import { CV_LANGUAGES } from '../constants';
+import { CV_LANGUAGES, DEFAULT_KANBAN_SLA } from '../constants';
+import SlaConfigSection from '../components/SlaConfigSection';
+import { validateKanbanSlaForm } from '../utils/stageTime';
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -10,6 +12,8 @@ export default function SettingsPage() {
   const [searchQueryPath, setSearchQueryPath] = useState('');
   const [searchQueryExists, setSearchQueryExists] = useState(false);
   const [defaultCvLanguage, setDefaultCvLanguage] = useState('pt-BR');
+  const [kanbanSla, setKanbanSla] = useState(DEFAULT_KANBAN_SLA);
+  const [slaErrors, setSlaErrors] = useState({});
   const [message, setMessage] = useState(null);
   const [showResetModal, setShowResetModal] = useState(false);
 
@@ -25,6 +29,7 @@ export default function SettingsPage() {
       setSearchQueryPath(settings.searchQueryPath || './search-query.txt');
       setSearchQueryExists(Boolean(settings.searchQueryExists));
       setDefaultCvLanguage(settings.defaultCvLanguage || 'pt-BR');
+      setKanbanSla(settings.kanbanSla || DEFAULT_KANBAN_SLA);
     }
   }, [settings]);
 
@@ -42,6 +47,29 @@ export default function SettingsPage() {
     },
     onError: (err) => setMessage(`Erro: ${err.message}`),
   });
+
+  const saveSlaMutation = useMutation({
+    mutationFn: () => api.updateSettings({ kanbanSla }),
+    onSuccess: (data) => {
+      setKanbanSla(data.kanbanSla || kanbanSla);
+      setSlaErrors({});
+      setMessage('SLA de tempo de resposta salvo.');
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    },
+    onError: (err) => setMessage(`Erro: ${err.message}`),
+  });
+
+  function handleSaveSla() {
+    const errors = validateKanbanSlaForm(kanbanSla);
+    setSlaErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setMessage('Corrija os limites de SLA antes de salvar.');
+      return;
+    }
+    setMessage(null);
+    saveSlaMutation.mutate();
+  }
 
   const pickResumeMutation = useMutation({
     mutationFn: api.pickResumeFile,
@@ -92,7 +120,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-xl font-semibold text-white">Configurações</h1>
         <p className="text-sm text-slate-400">
-          Currículo base, critérios de busca e preferências para geração de CV.
+          Currículo base, critérios de busca, SLA do kanban e preferências para geração de CV.
         </p>
       </div>
 
@@ -205,6 +233,27 @@ export default function SettingsPage() {
         </button>
       </section>
 
+      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+        <div>
+          <h2 className="text-base font-semibold text-white">Tempo de Resposta (SLA)</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Defina quantos dias uma vaga pode permanecer em cada etapa antes de entrar em atenção ou
+            estado crítico no kanban.
+          </p>
+        </div>
+
+        <SlaConfigSection value={kanbanSla} onChange={setKanbanSla} errors={slaErrors} />
+
+        <button
+          type="button"
+          onClick={handleSaveSla}
+          disabled={saveSlaMutation.isPending}
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+        >
+          {saveSlaMutation.isPending ? 'Salvando...' : 'Salvar SLA'}
+        </button>
+      </section>
+
       <section className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
         <h2 className="mb-1 font-medium text-white">Zerar banco de dados</h2>
         <p className="mb-4 text-sm text-slate-400">
@@ -259,7 +308,7 @@ function ResetDatabaseModal({ onClose, onConfirm, isPending, error }) {
         </ul>
 
         <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          As configurações (currículo base, critérios de busca e idioma padrão) serão mantidas. Esta ação{' '}
+          As configurações (currículo base, critérios de busca, SLA e idioma padrão) serão mantidas. Esta ação{' '}
           <strong className="font-semibold">não pode ser desfeita</strong> — não há rollback.
         </p>
 

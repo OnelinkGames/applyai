@@ -24,6 +24,27 @@ export const CV_LANGUAGES = [
   { value: 'es-ES', label: 'Español' },
 ];
 
+/** Colunas com acompanhamento de tempo de permanência */
+export const MONITORED_STATUSES = ['applied', 'interview', 'technical_interview'];
+
+export const STATUS_TO_SLA_KEY = {
+  applied: 'applied',
+  interview: 'interview',
+  technical_interview: 'technicalInterview',
+};
+
+export const SLA_COLUMNS = [
+  { key: 'applied', label: 'Aplicadas' },
+  { key: 'interview', label: 'Entrevista' },
+  { key: 'technicalInterview', label: 'Entrevista técnica' },
+];
+
+export const DEFAULT_KANBAN_SLA = {
+  applied: { normalLimitDays: 15, warningLimitDays: 30 },
+  interview: { normalLimitDays: 15, warningLimitDays: 30 },
+  technicalInterview: { normalLimitDays: 15, warningLimitDays: 30 },
+};
+
 export function scoreColor(score) {
   if (score >= 90) return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
   if (score >= 80) return 'bg-sky-500/20 text-sky-300 border-sky-500/40';

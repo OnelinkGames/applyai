@@ -1,11 +1,14 @@
 import { useDraggable } from '@dnd-kit/core';
 import { scoreColor } from '../constants';
+import { getStageTimeIndicator } from '../utils/stageTime';
 
-export default function JobCard({ job, onClick }) {
+export default function JobCard({ job, onClick, kanbanSla }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: String(job.id),
     data: { job, status: job.status },
   });
+
+  const stageTime = getStageTimeIndicator(job, kanbanSla);
 
   const style = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
@@ -19,8 +22,8 @@ export default function JobCard({ job, onClick }) {
       {...attributes}
       onClick={() => onClick(job)}
       className={`cursor-grab rounded-xl border border-slate-700 bg-slate-800/80 p-3 shadow-sm transition hover:border-slate-500 active:cursor-grabbing ${
-        isDragging ? 'opacity-50 ring-2 ring-sky-500' : ''
-      }`}
+        stageTime ? `border-l-4 ${stageTime.borderClass} ${stageTime.cardClass}` : ''
+      } ${isDragging ? 'opacity-50 ring-2 ring-sky-500' : ''}`}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <h3 className="text-sm font-medium leading-snug text-white">{job.title}</h3>
@@ -33,6 +36,14 @@ export default function JobCard({ job, onClick }) {
       <p className="text-xs text-slate-400">{job.company}</p>
       {job.location && (
         <p className="mt-1 truncate text-xs text-slate-500">{job.location}</p>
+      )}
+      {stageTime && (
+        <p
+          className={`mt-2 inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${stageTime.badgeClass}`}
+        >
+          <span aria-hidden="true">{stageTime.icon}</span>
+          <span>{stageTime.label}</span>
+        </p>
       )}
     </div>
   );
