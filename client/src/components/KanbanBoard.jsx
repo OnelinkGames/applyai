@@ -135,8 +135,8 @@ export default function KanbanBoard() {
   }
 
   return (
-    <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-white">Pipeline de vagas</h1>
           <p className="text-sm text-slate-400">{jobs.length} vagas no total</p>
@@ -172,13 +172,13 @@ export default function KanbanBoard() {
       </div>
 
       {searchMessage && (
-        <div className="mb-4 rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-100">
+        <div className="mb-4 shrink-0 rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-100">
           {searchMessage}
         </div>
       )}
 
       {importMessage && (
-        <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300">
+        <div className="mb-4 shrink-0 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300">
           {importMessage}
         </div>
       )}
@@ -189,7 +189,8 @@ export default function KanbanBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="app-scrollbar flex min-h-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden">
           {JOB_STATUSES.map((status) => (
             <KanbanColumn
               key={status}
@@ -199,6 +200,7 @@ export default function KanbanBoard() {
               kanbanSla={kanbanSla}
             />
           ))}
+        </div>
         </div>
         <DragOverlay>
           {activeJob ? (
@@ -220,6 +222,6 @@ export default function KanbanBoard() {
           isSearching={searchMutation.isPending}
         />
       )}
-    </>
+    </div>
   );
 }

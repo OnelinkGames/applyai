@@ -8,17 +8,17 @@ export default function KanbanColumn({ status, jobs, onJobClick, kanbanSla }) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-w-[260px] max-w-[280px] flex-1 flex-col rounded-2xl border bg-slate-900/50 ${
+      className={`flex h-full min-h-0 w-[270px] shrink-0 flex-col rounded-2xl border bg-slate-900/50 ${
         isOver ? 'border-sky-500 bg-sky-950/20' : 'border-slate-800'
       }`}
     >
-      <div className="flex items-center justify-between border-b border-slate-800 px-3 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-3 py-3">
         <h2 className="text-sm font-semibold text-slate-200">{STATUS_LABELS[status]}</h2>
         <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
           {jobs.length}
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+      <div className="app-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
         {jobs.map((job) => (
           <JobCard key={job.id} job={job} onClick={onJobClick} kanbanSla={kanbanSla} />
         ))}

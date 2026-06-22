@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply overflow-hidden bg-slate-950 text-slate-100 antialiased;
+}
+
+/* Scrollbars alinhadas ao tema escuro (slate) */
+.app-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(71 85 105) rgb(15 23 42);
+}
+
+.app-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.app-scrollbar::-webkit-scrollbar-track {
+  background: rgb(15 23 42);
+  border-radius: 5px;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(51 65 85);
+  border-radius: 5px;
+  border: 2px solid rgb(15 23 42);
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(71 85 105);
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgb(100 116 139);
+}
+
+.app-scrollbar::-webkit-scrollbar-corner {
+  background: rgb(15 23 42);
 }

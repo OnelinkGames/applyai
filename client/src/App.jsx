@@ -7,10 +7,11 @@ import AppIcon from './components/AppIcon';
 
 export default function App() {
   const location = useLocation();
+  const isKanban = location.pathname === '/';
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div className="grid h-full grid-rows-[auto_1fr] overflow-hidden">
+      <header className="z-40 border-b border-slate-800 bg-slate-900/80 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-white">
             <AppIcon className="h-8 w-8 shrink-0" />
@@ -60,13 +61,21 @@ export default function App() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6">
-        <Routes>
-          <Route path="/" element={<KanbanPage />} />
-          <Route path="/ai-costs" element={<AiCostsPage />} />
-          <Route path="/imports" element={<ImportsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
+      <main
+        className={`app-scrollbar mx-auto min-h-0 w-full max-w-[1600px] px-4 ${
+          isKanban
+            ? 'flex flex-col overflow-hidden py-4'
+            : 'overflow-y-auto py-6'
+        }`}
+      >
+        <div className={isKanban ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : undefined}>
+          <Routes>
+            <Route path="/" element={<KanbanPage />} />
+            <Route path="/ai-costs" element={<AiCostsPage />} />
+            <Route path="/imports" element={<ImportsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );
