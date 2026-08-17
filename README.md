@@ -176,13 +176,15 @@ O `postinstall` do server recompila o `better-sqlite3` para a versão do Node em
 npm run dev
 ```
 
+Portas padrão (definidas no `.env`): frontend `5173`, API `3001`.
+
 - **Frontend:** http://localhost:5173  
 - **API:** http://localhost:3001/api  
 
 Validar que a API responde:
 
 ```bash
-curl http://localhost:3001/api/health
+curl http://localhost:${BACKEND_PORT:-3001}/api/health
 # {"ok":true}
 ```
 
@@ -194,8 +196,8 @@ npm test
 
 ### Problemas comuns
 
-**`ECONNREFUSED 127.0.0.1:3001` (proxy do Vite)**  
-O backend não está rodando. Use `npm run dev` na **raiz** (não rode só o client). Em terminais separados: `npm run dev:server` + `npm run dev:client`.
+**`ECONNREFUSED` no proxy do Vite**  
+O backend não está rodando, ou `BACKEND_PORT` no `.env` não bate com o proxy. Use `npm run dev` na **raiz** (não rode só o client). Em terminais separados: `npm run dev:server` + `npm run dev:client`.
 
 **`better_sqlite3.node` / `NODE_MODULE_VERSION` / `ERR_DLOPEN_FAILED`**  
 O módulo nativo foi compilado para outra versão do Node. Com a versão certa ativa:
@@ -230,11 +232,12 @@ cp .env.example .env
 |----------|--------|-----------|
 | `OPENAI_API_KEY` | — | Obrigatória para gerar CVs; opcional para refinar busca |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Modelo usado na geração de CV e análise de perfil |
-| `PORT` | `3001` | Porta do servidor Express |
+| `BACKEND_PORT` | `3001` | Porta do servidor Express |
+| `FRONTEND_PORT` | `5173` | Porta do Vite (frontend) |
 | `DATABASE_PATH` | `./data/vagas.db` | Banco SQLite local |
 | `RESUME_PATH` | `./resume.md` | Caminho padrão do currículo (também configurável na UI) |
 | `SEARCH_QUERY_PATH` | `./search-query.txt` | Caminho padrão dos critérios de busca |
-| `CLIENT_ORIGIN` | `http://localhost:5173` | Origem CORS do frontend |
+| `CLIENT_ORIGIN` | `http://localhost:${FRONTEND_PORT}` | Origem CORS do frontend (opcional; derivado de `FRONTEND_PORT` se omitido) |
 | `ADZUNA_APP_ID` | — | Opcional — habilita provider Adzuna |
 | `ADZUNA_APP_KEY` | — | Opcional — habilita provider Adzuna |
 | `LINKEDIN_CLIENT_ID` | — | Opcional — habilita provider LinkedIn |
@@ -264,8 +267,8 @@ npm run dev
 
 Isso sobe:
 
-- **Backend:** http://localhost:3001 (`/api`)
-- **Frontend:** http://localhost:5173
+- **Backend:** `http://localhost:${BACKEND_PORT}` (`/api`) — padrão `3001`
+- **Frontend:** `http://localhost:${FRONTEND_PORT}` — padrão `5173`
 
 Comandos individuais:
 
