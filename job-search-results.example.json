@@ -1,0 +1,42 @@
+{
+  "searchCriteria": {
+    "position": "Full Stack Developer",
+    "technologies": ["React", "Node.js", "TypeScript"],
+    "remoteOnly": true,
+    "location": null,
+    "preferredSeniority": "Senior",
+    "international": true
+  },
+  "candidateProfile": {
+    "name": "Alex Rivera",
+    "seniority": "Senior",
+    "yearsOfExperience": 8,
+    "languages": ["Português", "English"],
+    "mainTechnologies": ["React", "Node.js", "TypeScript", "PostgreSQL"]
+  },
+  "jobs": [
+    {
+      "title": "Senior Full Stack Developer",
+      "company": "Example Labs",
+      "url": "https://example.com/jobs/senior-full-stack",
+      "location": "Remote",
+      "salary": null,
+      "description": "Produto web com React, Node.js e TypeScript.",
+      "requirements": ["React", "Node.js", "TypeScript"],
+      "score": {
+        "overall": 86,
+        "technologies": 90,
+        "experience": 84,
+        "salary": 80,
+        "location": 90
+      },
+      "matchReasons": ["React e Node.js aparecem na vaga e no currículo de exemplo"],
+      "foundAt": "2026-06-13T15:00:00Z"
+    }
+  ],
+  "summary": {
+    "companiesSearched": 1,
+    "jobsFound": 1,
+    "jobsReturned": 1
+  }
+}

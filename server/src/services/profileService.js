@@ -6,6 +6,7 @@ import {
   readResumeContent,
   readSearchQueryContent,
 } from './importService.js';
+import { getPublicAiSettings } from './aiConfigService.js';
 import { enhanceSearchContextWithAi } from './searchProfileAiService.js';
 
 const TECH_KEYWORDS = [
@@ -271,10 +272,10 @@ export async function buildSearchContext(db, overrides = {}, options = {}) {
   let aiUsage = null;
   let aiEnhanced = null;
 
-  const useAi = options.useAi !== false && Boolean(process.env.OPENAI_API_KEY);
+  const useAi = options.useAi !== false && getPublicAiSettings(db).configured;
   if (useAi) {
     try {
-      aiEnhanced = await enhanceSearchContextWithAi({
+      aiEnhanced = await enhanceSearchContextWithAi(db, {
         resumeContent,
         searchQueryContent,
         ruleBased: {
@@ -351,6 +352,8 @@ export function getSearchDefaults(db) {
     searchQueryPath,
   };
 
+  const ai = getPublicAiSettings(db);
+
   return {
     resumePath,
     resumeExists: fs.existsSync(resolveProjectPath(resumePath)),
@@ -360,6 +363,7 @@ export function getSearchDefaults(db) {
     filters,
     searchCriteria,
     candidateProfile,
-    aiAvailable: Boolean(process.env.OPENAI_API_KEY),
+    ai,
+    aiAvailable: ai.configured,
   };
 }

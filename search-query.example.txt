@@ -1,11 +1,12 @@
-Quero vagas de Frontend ou Backend Nacionais ou Internacionais.
+Quero vagas de Frontend ou Backend, nacionais ou internacionais.
+
 Tecnologias:
-- Angular
 - React
-- Node
+- Node.js
+- TypeScript
 
 Salário:
-- Mínimo: 
+- Mínimo:
 - Moeda: USD | BRL | EUR
 - Período: mensal | anual
 
@@ -17,10 +18,7 @@ Modalidade:
 Escopo geográfico:
 - [X] Internacional
 - [X] Brasil
-- Países específicos: 
+- Países específicos:
 
 Senioridade:
 - Pleno | Senior
-
-Outros critérios:
-- Também tenho experiencia em Pentaho se achar algo interessante

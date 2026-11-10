@@ -178,6 +178,7 @@ export async function runJobSearch(db, body = {}) {
       model: aiUsage.model,
       promptTokens: aiUsage.promptTokens,
       completionTokens: aiUsage.completionTokens,
+      costUsd: aiUsage.costUsd,
     });
   }
 

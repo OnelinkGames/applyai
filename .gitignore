@@ -6,6 +6,11 @@ node_modules/
 .env.*
 !.env.example
 
+# Personal profile data — keep local copies, publish only the examples
+resume.md
+search-query.txt
+job-search-results.json
+
 # Build output
 dist/
 build/
@@ -16,6 +21,7 @@ out/
 # Database & local data
 data/vagas.db
 data/vagas.db-*
+data/*.encryption-key
 data/resumes/*
 !data/resumes/.gitkeep
 

@@ -24,7 +24,7 @@ export default function AiCostsPage() {
       <div>
         <h1 className="text-xl font-semibold text-white">Gastos com IA</h1>
         <p className="text-sm text-slate-400">
-          Acompanhamento de custos estimados com base no uso de tokens da OpenAI.
+          Acompanhamento de custos estimados das chamadas feitas pelo OpenRouter.
         </p>
       </div>
 
@@ -149,8 +149,8 @@ export default function AiCostsPage() {
       </section>
 
       <p className="text-xs text-slate-600">
-        Valores estimados com base na tabela de preços da OpenAI por modelo. Podem divergir levemente
-        da fatura real.
+        Quando o OpenRouter informa o custo da chamada, esse valor é o registrado. Nos demais casos o
+        custo é estimado pelo preço publicado do modelo e pode divergir da fatura.
       </p>
     </div>
   );

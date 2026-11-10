@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import { CV_LANGUAGES, DEFAULT_KANBAN_SLA } from '../constants';
+import AiProviderSection from '../components/AiProviderSection';
 import SlaConfigSection from '../components/SlaConfigSection';
 import { validateKanbanSlaForm } from '../utils/stageTime';
 
@@ -120,7 +121,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-xl font-semibold text-white">Configurações</h1>
         <p className="text-sm text-slate-400">
-          Currículo base, critérios de busca, SLA do kanban e preferências para geração de CV.
+          Modelo de IA, credencial do OpenRouter, currículo base, critérios de busca e SLA do kanban.
         </p>
       </div>
 
@@ -129,6 +130,8 @@ export default function SettingsPage() {
           {message}
         </div>
       )}
+
+      <AiProviderSection settings={settings} onMessage={setMessage} />
 
       <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
         <div>
@@ -308,7 +311,7 @@ function ResetDatabaseModal({ onClose, onConfirm, isPending, error }) {
         </ul>
 
         <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          As configurações (currículo base, critérios de busca, SLA e idioma padrão) serão mantidas. Esta ação{' '}
+          As configurações (IA, currículo base, critérios de busca, SLA e idioma padrão) serão mantidas. Esta ação{' '}
           <strong className="font-semibold">não pode ser desfeita</strong> — não há rollback.
         </p>
 

@@ -52,11 +52,14 @@ test('GET /api/jobs returns array', async () => {
   assert.ok(Array.isArray(res.body));
 });
 
-test('GET /api/settings returns resume and search paths', async () => {
+test('GET /api/settings returns resume, search paths and AI status', async () => {
   const res = await request(app).get('/api/settings');
   assert.equal(res.status, 200);
   assert.ok('resumePath' in res.body);
   assert.ok('searchQueryPath' in res.body);
+  assert.equal(res.body.ai.provider, 'openrouter');
+  assert.equal(res.body.ai.configured, false);
+  assert.equal(Object.hasOwn(res.body.ai, 'apiKey'), false);
 });
 
 test('POST /api/imports accepts JSON file upload', async () => {

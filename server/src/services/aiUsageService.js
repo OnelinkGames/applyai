@@ -6,9 +6,13 @@ export function recordAiUsage(db, {
   promptTokens = 0,
   completionTokens = 0,
   jobId = null,
+  costUsd: reportedCost = null,
 }) {
   const totalTokens = promptTokens + completionTokens;
-  const costUsd = calculateCostUsd(model, promptTokens, completionTokens);
+  const costUsd =
+    typeof reportedCost === 'number' && Number.isFinite(reportedCost)
+      ? reportedCost
+      : calculateCostUsd(model, promptTokens, completionTokens);
 
   const result = db
     .prepare(
@@ -133,6 +137,7 @@ export function getAiUsageReport(db) {
 const OPERATION_LABELS = {
   cv_generation: 'Geração de CV',
   job_search_profile: 'Análise de perfil para busca',
+  connection_test: 'Teste de conexão',
 };
 
 function formatMonthLabel(ym) {

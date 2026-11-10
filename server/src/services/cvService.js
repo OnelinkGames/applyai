@@ -1,5 +1,6 @@
-import OpenAI from 'openai';
+import { getAiCredentials } from './aiConfigService.js';
 import { readResumeContent } from './importService.js';
+import { createChatCompletion, usageFromResponse } from './openRouterService.js';
 
 const LANGUAGE_LABELS = {
   'pt-BR': 'Português (Brasil)',
@@ -21,16 +22,15 @@ function stripCvMetaCommentary(content) {
 }
 
 export async function generateCvForJob(db, job, language) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    const error = new Error('OPENAI_API_KEY não configurada');
+  const credentials = getAiCredentials(db);
+  if (!credentials) {
+    const error = new Error('Configure a chave e o modelo do OpenRouter em Configurações.');
     error.status = 503;
     throw error;
   }
 
   const resumeContent = readResumeContent(db);
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-  const client = new OpenAI({ apiKey });
+  const { model, apiKey } = credentials;
 
   const prompt = `You are a professional resume writer specialized in ATS-optimized resumes. Adapt the candidate's resume for a specific job application.
 
@@ -71,8 +71,11 @@ Match reasons: ${(job.matchReasons || []).join('; ')}
 BASE RESUME:
 ${resumeContent}`;
 
-  const response = await client.chat.completions.create({
+  const response = await createChatCompletion({
+    apiKey,
     model,
+    temperature: 0.35,
+    maxTokens: 2200,
     messages: [
       {
         role: 'system',
@@ -81,24 +84,17 @@ ${resumeContent}`;
       },
       { role: 'user', content: prompt },
     ],
-    temperature: 0.35,
-    max_tokens: 2200,
   });
 
   const raw = response.choices[0]?.message?.content?.trim();
   if (!raw) {
-    throw new Error('OpenAI retornou resposta vazia');
+    throw new Error('O modelo não retornou conteúdo.');
   }
 
   const content = stripCvMetaCommentary(raw);
 
   return {
     content,
-    usage: {
-      model,
-      promptTokens: response.usage?.prompt_tokens ?? 0,
-      completionTokens: response.usage?.completion_tokens ?? 0,
-      totalTokens: response.usage?.total_tokens ?? 0,
-    },
+    usage: usageFromResponse(response, model),
   };
 }

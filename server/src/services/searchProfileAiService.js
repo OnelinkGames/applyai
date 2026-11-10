@@ -1,4 +1,5 @@
-import OpenAI from 'openai';
+import { getAiCredentials } from './aiConfigService.js';
+import { createChatCompletion, usageFromResponse } from './openRouterService.js';
 
 function normalizeStringArray(values) {
   if (!Array.isArray(values)) return [];
@@ -30,19 +31,19 @@ function parseAiPayload(raw) {
   };
 }
 
-export async function enhanceSearchContextWithAi({ resumeContent, searchQueryContent, ruleBased }) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+export async function enhanceSearchContextWithAi(db, { resumeContent, searchQueryContent, ruleBased }) {
+  const credentials = getAiCredentials(db);
+  if (!credentials) {
     return { aiUsed: false };
   }
 
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-  const client = new OpenAI({ apiKey });
+  const { model, apiKey } = credentials;
 
-  const response = await client.chat.completions.create({
+  const response = await createChatCompletion({
+    apiKey,
     model,
-    response_format: { type: 'json_object' },
     temperature: 0.2,
+    json: true,
     messages: [
       {
         role: 'system',
@@ -83,7 +84,7 @@ ${JSON.stringify(ruleBased, null, 2)}`,
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error('Resposta vazia da OpenAI ao analisar perfil de busca');
+    throw new Error('O modelo não retornou conteúdo ao analisar o perfil de busca.');
   }
 
   const parsed = parseAiPayload(content);
@@ -92,10 +93,6 @@ ${JSON.stringify(ruleBased, null, 2)}`,
     aiUsed: true,
     candidateProfile: parsed.candidateProfile,
     searchFilters: parsed.searchFilters,
-    usage: {
-      model,
-      promptTokens: response.usage?.prompt_tokens ?? 0,
-      completionTokens: response.usage?.completion_tokens ?? 0,
-    },
+    usage: usageFromResponse(response, model),
   };
 }

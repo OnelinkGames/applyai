@@ -43,10 +43,10 @@ export default function JobSearchModal({ onClose, onSearch, isSearching }) {
           <div>
             <h2 className="text-lg font-semibold text-white">Buscar vagas</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Critérios carregados do resume.md e search-query.txt configurados.
+              Critérios carregados do currículo e dos critérios de busca configurados.
               {searchDefaults.aiAvailable
-                ? ' A busca usa IA para refinar tags quando OPENAI_API_KEY está definida.'
-                : ''}
+                ? ` A busca refina o perfil com ${searchDefaults.ai?.model}.`
+                : ' Configure o OpenRouter em Configurações para refinar a busca com IA.'}
             </p>
           </div>
           <button

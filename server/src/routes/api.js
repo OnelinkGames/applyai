@@ -11,7 +11,9 @@ import {
   pickSearchQueryFile,
   validateSearchQueryFile,
 } from '../services/fileDialogService.js';
+import { getPublicAiSettings, resolveTestCredentials, saveAiSettings } from '../services/aiConfigService.js';
 import { generateCvForJob } from '../services/cvService.js';
+import { listAiModels, testOpenRouterConnection } from '../services/openRouterService.js';
 import { recordAiUsage, getAiUsageReport } from '../services/aiUsageService.js';
 import { runJobSearch } from '../services/jobSearchService.js';
 import { getSearchDefaults } from '../services/profileService.js';
@@ -146,6 +148,7 @@ export function createRouter(db) {
         model: usage.model,
         promptTokens: usage.promptTokens,
         completionTokens: usage.completionTokens,
+        costUsd: usage.costUsd,
         jobId: job.id,
       });
 
@@ -273,6 +276,7 @@ export function createRouter(db) {
       searchQueryAbsolutePath,
       defaultCvLanguage: getSetting(db, 'default_cv_language', 'pt-BR'),
       kanbanSla: getKanbanSla(db),
+      ai: getPublicAiSettings(db),
     };
   }
 
@@ -354,6 +358,49 @@ export function createRouter(db) {
 
   router.get('/meta/statuses', (_req, res) => {
     res.json(JOB_STATUSES);
+  });
+
+  router.patch('/settings/ai', (req, res) => {
+    try {
+      saveAiSettings(db, req.body || {});
+      res.json(buildSettingsResponse());
+    } catch (error) {
+      const status = error.status || 400;
+      res.status(status).json({ error: error.message || 'Erro ao salvar a configuração de IA' });
+    }
+  });
+
+  router.post('/settings/ai/test', async (req, res) => {
+    let source = null;
+    try {
+      const credentials = resolveTestCredentials(db, req.body || {});
+      source = credentials.source;
+      const result = await testOpenRouterConnection(credentials);
+      recordAiUsage(db, {
+        operation: 'connection_test',
+        model: result.usage.model,
+        promptTokens: result.usage.promptTokens,
+        completionTokens: result.usage.completionTokens,
+        costUsd: result.usage.costUsd,
+      });
+      const message =
+        source === 'saved'
+          ? `${result.message} O teste usou a chave já salva neste computador.`
+          : result.message;
+      res.json({ ok: true, model: result.model, message });
+    } catch (error) {
+      const status = error.status || 502;
+      let message = error.message || 'Falha ao testar a conexão com o OpenRouter.';
+      if (source === 'saved' && !/chave salva/i.test(message)) {
+        message = `${message} O teste usou a chave já salva neste computador.`;
+      }
+      res.status(status).json({ ok: false, error: message });
+    }
+  });
+
+  router.get('/ai/models', async (_req, res) => {
+    const catalog = await listAiModels();
+    res.json(catalog);
   });
 
   router.get('/ai/usage', (_req, res) => {

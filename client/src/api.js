@@ -49,6 +49,19 @@ export const api = {
     request(`/imports?page=${page}&limit=${limit}`),
   getAiUsage: () => request('/ai/usage'),
   getSettings: () => request('/settings'),
+  getAiModels: () => request('/ai/models'),
+  updateAiSettings: (data) =>
+    request('/settings/ai', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+  testAiConnection: (data) =>
+    request('/settings/ai/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
   updateSettings: (data) =>
     request('/settings', {
       method: 'PATCH',
